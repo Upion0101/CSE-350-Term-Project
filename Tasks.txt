@@ -1,0 +1,9 @@
+parker-general description
+trevor-intro
+roger, abel, christian,- requirments
+
+meeting 12:00pm est sunday
+
+
+make sure you get python ide (pycharm)
+
