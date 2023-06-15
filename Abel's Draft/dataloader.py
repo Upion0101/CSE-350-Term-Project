@@ -3,7 +3,7 @@ import pandas as pd
 
 
 class DataLoader():
-    def getData(self):
+    def readCSV(self):
         data_folder = 'Dataset'
 
         # List of all the date folders
@@ -35,11 +35,11 @@ class DataLoader():
                         summary_files.append(summary_file_path)
 
         # Load the metadata files into a DataFrame
-        metadata_dataframes = [pd.read_csv(file) for file in metadata_files]
+        metadata_df = [pd.read_csv(file) for file in metadata_files]
 
         # Load the summary files into a DataFrame
-        summary_dataframes = [pd.read_csv(file) for file in summary_files]
+        summary_df = [pd.read_csv(file) for file in summary_files]
 
-        return metadata_dataframes,summary_dataframes
+        return metadata_df,summary_df
 
 
