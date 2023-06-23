@@ -7,7 +7,7 @@ dataLoader = DataLoader()
 # switch print debug on and off
 DEBUG = True
 
-metadata_dataframes, summary_dataframes = dataLoader.getData()
+metadata_dataframes, summary_dataframes = dataLoader.readCSV()
 
 
 # Debugging prints
