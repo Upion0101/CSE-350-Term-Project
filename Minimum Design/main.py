@@ -1,4 +1,3 @@
-#roger roger sussy wussy
 import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
 from matplotlib.figure import Figure
@@ -24,9 +23,6 @@ class DataVisualizer:
         btn_frame = tk.Frame(master=window)
         btn_frame.pack(side=tk.BOTTOM)
 
-        load_btn = tk.Button(master=btn_frame, text="Load CSV", command=self.load_csv)
-        load_btn.pack(side=tk.LEFT)
-
         clear_btn = tk.Button(master=btn_frame, text="Clear Data", command=self.clear_data)
         clear_btn.pack(side=tk.LEFT)
 
@@ -37,15 +33,7 @@ class DataVisualizer:
         self.time_range = None
         self.filename = None
 
-        stats_btn = tk.Button(master=btn_frame, text="Show Statistics", command=self.show_stats)
-        stats_btn.pack(side=tk.LEFT)
-
-    def load_csv(self):
-        if hasattr(self, 'client_dropdown'):
-            # If the dropdown menu already exists, return
-            return
-
-        client_names = [
+        self.client_names = [
             '20200118\\310',
             '20200118\\311',
             '20200118\\312',
@@ -59,7 +47,7 @@ class DataVisualizer:
         ]
 
         selected_client_var = tk.StringVar(self.window)
-        selected_client_var.set(client_names[0])  # Set the default selected client
+        selected_client_var.set(self.client_names[0])  # Set the default selected client
 
         def on_client_selected(*args):
             selected_client = selected_client_var.get()  # Get the selected client
@@ -74,8 +62,13 @@ class DataVisualizer:
 
         selected_client_var.trace('w', on_client_selected)
 
-        self.client_dropdown = tk.OptionMenu(self.window, selected_client_var, *client_names)
+        self.client_dropdown = tk.OptionMenu(self.window, selected_client_var, *self.client_names)
         self.client_dropdown.pack()
+
+        stats_btn = tk.Button(master=btn_frame, text="Show Statistics", command=self.show_stats)
+        stats_btn.pack(side=tk.LEFT)
+
+        self.plot_data()
 
     def clear_data(self):
         for ax in self.axes:
