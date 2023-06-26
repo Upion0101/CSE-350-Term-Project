@@ -9,8 +9,8 @@ import os
 # Apply custom style
 style.use('ggplot')
 
-
 class DataVisualizer:
+
     def __init__(self, window):
         self.window = window
         self.window.title("Data Visualizer")
@@ -52,15 +52,14 @@ class DataVisualizer:
             '20200121\\310',
             '20200121\\312'
         ]
-        # Create a dropdown menu to select a client
-        selected_client = tk.StringVar(self.window)
-        selected_client.set(client_names[0])  # Set the default selected client
-        client_dropdown = tk.OptionMenu(self.window, selected_client, *client_names)
+
+        selected_client_var = tk.StringVar(self.window)
+        selected_client_var.set(client_names[0])  # Set the default selected client
+        client_dropdown = tk.OptionMenu(self.window, selected_client_var, *client_names)
         client_dropdown.pack()
 
         def on_client_selected(*args):
-            global selected_client
-            selected_client = selected_client.get()  # Get the selected client
+            selected_client = selected_client_var.get()  # Get the selected client
             folder_path = os.path.join(os.getcwd(), 'Dataset', selected_client)
             file_path = os.path.join(folder_path, 'summary.csv')
 
@@ -69,7 +68,8 @@ class DataVisualizer:
                 self.plot_data()
             else:
                 messagebox.showerror("File Not Found", f"The file {file_path} does not exist.")
-        selected_client.trace('w', on_client_selected)
+
+        selected_client_var.trace('w', on_client_selected)
 
     def clear_data(self):
         for ax in self.axes:
