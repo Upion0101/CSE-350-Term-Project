@@ -40,6 +40,10 @@ class DataVisualizer:
         stats_btn.pack(side=tk.LEFT)
 
     def load_csv(self):
+        if hasattr(self, 'client_dropdown'):
+            # If the dropdown menu already exists, return
+            return
+
         client_names = [
             '20200118\\310',
             '20200118\\311',
@@ -55,8 +59,6 @@ class DataVisualizer:
 
         selected_client_var = tk.StringVar(self.window)
         selected_client_var.set(client_names[0])  # Set the default selected client
-        client_dropdown = tk.OptionMenu(self.window, selected_client_var, *client_names)
-        client_dropdown.pack()
 
         def on_client_selected(*args):
             selected_client = selected_client_var.get()  # Get the selected client
@@ -70,6 +72,9 @@ class DataVisualizer:
                 messagebox.showerror("File Not Found", f"The file {file_path} does not exist.")
 
         selected_client_var.trace('w', on_client_selected)
+
+        self.client_dropdown = tk.OptionMenu(self.window, selected_client_var, *client_names)
+        self.client_dropdown.pack()
 
     def clear_data(self):
         for ax in self.axes:
