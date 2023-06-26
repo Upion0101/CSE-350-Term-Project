@@ -1,3 +1,4 @@
+#roger roger sussy wussy
 import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
 from matplotlib.figure import Figure
