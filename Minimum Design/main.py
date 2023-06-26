@@ -4,6 +4,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import style
 import pandas as pd
+import os
 
 # Apply custom style
 style.use('ggplot')
@@ -39,10 +40,36 @@ class DataVisualizer:
         stats_btn.pack(side=tk.LEFT)
 
     def load_csv(self):
-        filename = filedialog.askopenfilename(filetypes=[('CSV Files', '*.csv')])
-        if filename:
-            self.filename = filename  # Store filename for later use
-            self.plot_data()
+        client_names = [
+            '20200118\\310',
+            '20200118\\311',
+            '20200118\\312',
+            '20200119\\310',
+            '20200119\\311',
+            '20200119\\312',
+            '20200120\\310',
+            '20200120\\312',
+            '20200121\\310',
+            '20200121\\312'
+        ]
+        # Create a dropdown menu to select a client
+        selected_client = tk.StringVar(self.window)
+        selected_client.set(client_names[0])  # Set the default selected client
+        client_dropdown = tk.OptionMenu(self.window, selected_client, *client_names)
+        client_dropdown.pack()
+
+        def on_client_selected(*args):
+            global selected_client
+            selected_client = selected_client.get()  # Get the selected client
+            folder_path = os.path.join(os.getcwd(), 'Dataset', selected_client)
+            file_path = os.path.join(folder_path, 'summary.csv')
+
+            if os.path.exists(file_path):
+                self.filename = file_path
+                self.plot_data()
+            else:
+                messagebox.showerror("File Not Found", f"The file {file_path} does not exist.")
+        selected_client.trace('w', on_client_selected)
 
     def clear_data(self):
         for ax in self.axes:
@@ -81,43 +108,55 @@ class DataVisualizer:
             label = tk.Label(master=stats_window, text=stats_str, justify=tk.LEFT)
             label.pack()
 
-
     def plot_data(self):
-        self.df = pd.read_csv(self.filename, usecols=['Eda avg', 'Acc magnitude avg', 'Unix Timestamp (UTC)'])
-        self.df['Datetime'] = pd.to_datetime(self.df['Unix Timestamp (UTC)'], unit='ms')
-        self.df['Minute'] = self.df['Datetime'].dt.minute + self.df['Datetime'].dt.hour * 60
+        if self.filename is None:
+            messagebox.showerror("No File Selected", "Please select a CSV file.")
+            return
 
-        # Drop rows with missing data
-        self.df.dropna(inplace=True)
+        if not os.path.isfile(self.filename):
+            messagebox.showerror("File Not Found", f"The selected file '{self.filename}' does not exist.")
+            return
 
-        # Sort data by 'Minute' column
-        self.df.sort_values('Minute', inplace=True)
+        try:
+            self.df = pd.read_csv(self.filename, usecols=['Eda avg', 'Acc magnitude avg', 'Unix Timestamp (UTC)'])
+            self.df['Datetime'] = pd.to_datetime(self.df['Unix Timestamp (UTC)'], unit='ms')
+            self.df['Minute'] = self.df['Datetime'].dt.minute + self.df['Datetime'].dt.hour * 60
 
-        for ax in self.axes:
-            ax.clear()
+            # Drop rows with missing data
+            self.df.dropna(inplace=True)
 
-        if self.time_range:
-            start, end = self.time_range
-            df_range = self.df[(self.df['Minute'] >= start) & (self.df['Minute'] <= end)]
-        else:
-            df_range = self.df
+            # Sort data by 'Minute' column
+            self.df.sort_values('Minute', inplace=True)
 
-        self.axes[0].plot(df_range['Minute'], df_range['Acc magnitude avg'], label='Acc magnitude avg', color='c')
-        self.axes[0].set_title('Acc magnitude avg Over Time', fontweight='bold', color='m')
-        self.axes[0].set_xlabel('Time (minutes)', fontweight='bold')
-        self.axes[0].set_ylabel('Acc magnitude avg', fontweight='bold')
-        self.axes[0].legend()
+            for ax in self.axes:
+                ax.clear()
 
-        self.axes[1].plot(df_range['Minute'], df_range['Eda avg'], label='Eda avg', color='b')
-        self.axes[1].set_title('Eda avg Over Time', fontweight='bold', color='m')
-        self.axes[1].set_xlabel('Time (minutes)', fontweight='bold')
-        self.axes[1].set_ylabel('Eda avg', fontweight='bold')
-        self.axes[1].legend()
+            if self.time_range:
+                start, end = self.time_range
+                df_range = self.df[(self.df['Minute'] >= start) & (self.df['Minute'] <= end)]
+            else:
+                df_range = self.df
 
-        # Adjust the spacing between subplots
-        self.fig.subplots_adjust(hspace=0.5)
+            self.axes[0].plot(df_range['Minute'], df_range['Acc magnitude avg'], label='Acc magnitude avg', color='c')
+            self.axes[0].set_title('Acc magnitude avg Over Time', fontweight='bold', color='m')
+            self.axes[0].set_xlabel('Time (minutes)', fontweight='bold')
+            self.axes[0].set_ylabel('Acc magnitude avg', fontweight='bold')
+            self.axes[0].legend()
 
-        self.canvas.draw()
+            self.axes[1].plot(df_range['Minute'], df_range['Eda avg'], label='Eda avg', color='b')
+            self.axes[1].set_title('Eda avg Over Time', fontweight='bold', color='m')
+            self.axes[1].set_xlabel('Time (minutes)', fontweight='bold')
+            self.axes[1].set_ylabel('Eda avg', fontweight='bold')
+            self.axes[1].legend()
+
+            # Adjust the spacing between subplots
+            self.fig.subplots_adjust(hspace=0.5)
+
+            self.canvas.draw()
+        except pd.errors.EmptyDataError:
+            messagebox.showerror("Empty File", "The selected file is empty.")
+        except pd.errors.ParserError:
+            messagebox.showerror("Invalid File", "The selected file is not a valid CSV file.")
 
 
 if __name__ == "__main__":
