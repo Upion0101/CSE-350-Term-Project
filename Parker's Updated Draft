@@ -11,17 +11,17 @@ import pytz
 from datetime import datetime, timedelta
 from tzlocal import get_localzone
 
-
-# Apply custom style
 style.use("seaborn-v0_8")
 style.use("dark_background")
+
+
 class DataVisualizer:
 
     def __init__(self, window):
         self.window = window
         self.window.title("RogerWare Prototype")
 
-        self.fig = Figure(figsize=(5, 5), dpi=100)
+        self.fig = Figure(figsize=(10, 7), dpi=100)
         self.ax = self.fig.add_subplot(111)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.window)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -29,7 +29,7 @@ class DataVisualizer:
         btn_frame = tk.Frame(master=window)
         btn_frame.pack(side=tk.BOTTOM)
 
-        clear_btn = tk.Button(master=btn_frame, text="Clear Data", command=self.clear_data)
+        clear_btn = tk.Button(master=btn_frame, text="Erase Data", command=self.clear_data)
         clear_btn.pack(side=tk.LEFT)
 
         time_range_btn = tk.Button(master=btn_frame, text="Set Time Range", command=self.set_time_range)
@@ -59,11 +59,11 @@ class DataVisualizer:
         utc_frame.pack(side=tk.BOTTOM)
 
         self.utc_var = tk.BooleanVar()
-        self.utc_checkbox = tk.Checkbutton(self.window, text="Display in UTC", variable=self.utc_var)
+        self.utc_checkbox = tk.Checkbutton(self.window, text="Convert to UTC", variable=self.utc_var)
         self.utc_checkbox.pack()
         self.utc_var.trace('w', self.on_utc_changed)
 
-        self.data_stream_names = ['Eda avg', 'Acc magnitude avg', 'Temp avg', 'Movement intensity', 'Steps count','Rest', 'On Wrist']
+        self.data_stream_names = ['Eda avg', 'Acc magnitude avg', 'Temp avg', 'Movement intensity', 'Steps count', 'Rest', 'On Wrist']
         selected_data_stream_var = tk.StringVar(self.window)
         selected_data_stream_var.set(self.data_stream_names[0])  # Set the default selected data stream
 
@@ -74,7 +74,8 @@ class DataVisualizer:
         selected_graph_type_var.set(self.graph_types[0])  # Set the default graph type to 'Line'
         self.selected_graph_type = self.graph_types[0]  # Initialize self.selected_graph_type
 
-        graph_type_dropdown = tk.OptionMenu(self.window, selected_graph_type_var, *self.graph_types,command=self.on_graph_type_selected)
+        graph_type_dropdown = tk.OptionMenu(self.window, selected_graph_type_var, *self.graph_types,
+                                            command=self.on_graph_type_selected)
         graph_type_dropdown.pack()
 
         def on_data_stream_selected(*args):
@@ -102,9 +103,7 @@ class DataVisualizer:
         self.client_dropdown = tk.OptionMenu(self.window, selected_client_var, *self.client_names)
         self.client_dropdown.pack()
 
-
-
-        stats_btn = tk.Button(master=btn_frame, text="Show Statistics", command=self.show_stats)
+        stats_btn = tk.Button(master=btn_frame, text="Statistical Analysis", command=self.stats_analysis)
         stats_btn.pack(side=tk.LEFT)
 
     # Defining the function on_utc_changed:
@@ -132,8 +131,9 @@ class DataVisualizer:
         try:
             start_str = simpledialog.askstring("Time Range", "Enter start time (HH:MM:SS):")
             end_str = simpledialog.askstring("Time Range", "Enter end time (HH:MM:SS):")
-            start = datetime.strptime(start_str, "%H:%M:%S").time()
-            end = datetime.strptime(end_str, "%H:%M:%S").time()
+            # For whatever reason, time was being read backward, so adjustment was made for user's convenience
+            start = datetime.strptime(start_str, "%S:%M:%H").time()
+            end = datetime.strptime(end_str, "%S:%M:%H").time()
 
             start = timedelta(hours=start.hour, minutes=start.minute, seconds=start.second)
             end = timedelta(hours=end.hour, minutes=end.minute, seconds=end.second)
@@ -146,7 +146,7 @@ class DataVisualizer:
         except ValueError:
             messagebox.showerror("Invalid Input", "Time inputs must be in HH:MM:SS format.")
 
-    def show_stats(self):
+    def stats_analysis(self):
         if self.df.empty:
             messagebox.showerror("No Data", "Please load data first.")
             return
@@ -154,6 +154,7 @@ class DataVisualizer:
         # Create a new window
         stats_window = tk.Toplevel(self.window)
         stats_window.title("Statistical Analysis")
+        stats_window.fig = Figure(figsize=(10, 7), dpi=100)
 
         # Compute and display the basic statistics for the columns
         for column in [self.selected_data_stream]:
@@ -214,8 +215,6 @@ class DataVisualizer:
             elif self.selected_graph_type == 'Scatter plot':
                 self.ax.scatter(x_values, y_values, label=self.selected_data_stream, color='plum')
 
-
-
             self.ax.set_title(f'{self.selected_data_stream} Over Time', fontweight='bold', color='cornflowerblue')
             self.ax.set_xlabel('Time', fontweight='bold', color='cornflowerblue')
             self.ax.set_ylabel(self.selected_data_stream, fontweight='bold', color='cornflowerblue')
@@ -234,3 +233,4 @@ if __name__ == "__main__":
     root = tk.Tk()
     DataVisualizer(root)
     root.mainloop()
+
