@@ -13,8 +13,8 @@ from tzlocal import get_localzone
 
 
 # Apply custom style
-style.use('ggplot')
-
+style.use("seaborn-v0_8")
+style.use("dark_background")
 class DataVisualizer:
 
     def __init__(self, window):
@@ -63,11 +63,19 @@ class DataVisualizer:
         self.utc_checkbox.pack()
         self.utc_var.trace('w', self.on_utc_changed)
 
-        self.data_stream_names = ['Eda avg', 'Acc magnitude avg', 'Temp avg', 'Movement intensity', 'Steps count','Rest']
+        self.data_stream_names = ['Eda avg', 'Acc magnitude avg', 'Temp avg', 'Movement intensity', 'Steps count','Rest', 'On Wrist']
         selected_data_stream_var = tk.StringVar(self.window)
         selected_data_stream_var.set(self.data_stream_names[0])  # Set the default selected data stream
 
         self.selected_data_stream = self.data_stream_names[0]  # Initialize self.selected_data_stream
+
+        self.graph_types = ['Line', 'Bar', 'Scatter plot']
+        selected_graph_type_var = tk.StringVar(self.window)
+        selected_graph_type_var.set(self.graph_types[0])  # Set the default graph type to 'Line'
+        self.selected_graph_type = self.graph_types[0]  # Initialize self.selected_graph_type
+
+        graph_type_dropdown = tk.OptionMenu(self.window, selected_graph_type_var, *self.graph_types,command=self.on_graph_type_selected)
+        graph_type_dropdown.pack()
 
         def on_data_stream_selected(*args):
             self.selected_data_stream = selected_data_stream_var.get()  # Get the selected data stream
@@ -94,6 +102,8 @@ class DataVisualizer:
         self.client_dropdown = tk.OptionMenu(self.window, selected_client_var, *self.client_names)
         self.client_dropdown.pack()
 
+
+
         stats_btn = tk.Button(master=btn_frame, text="Show Statistics", command=self.show_stats)
         stats_btn.pack(side=tk.LEFT)
 
@@ -106,6 +116,10 @@ class DataVisualizer:
         m = int((x % 3600) // 60)
         s = int(x % 60)
         return f"{h:02d}:{m:02d}:{s:02d}"
+
+    def on_graph_type_selected(self, selected_graph_type):
+        self.selected_graph_type = selected_graph_type
+        self.plot_data()  # Re-plot the data with the new graph type
 
     def clear_data(self):
         self.ax.clear()
@@ -139,9 +153,9 @@ class DataVisualizer:
 
         # Create a new window
         stats_window = tk.Toplevel(self.window)
-        stats_window.title("Statistics")
+        stats_window.title("Statistical Analysis")
 
-        # Compute and display the basic statistics for the 'Acc magnitude avg' and 'Eda avg' columns
+        # Compute and display the basic statistics for the columns
         for column in [self.selected_data_stream]:
             stats = self.df[column].describe()
             stats_str = f"{column}:\nMean: {stats['mean']}\nMedian: {self.df[column].median()}\nStd. dev: {stats['std']}\nMin: {stats['min']}\nMax: {stats['max']}"
@@ -190,27 +204,31 @@ class DataVisualizer:
             else:
                 df_range = self.df
 
-            self.ax.plot(df_range['Minute'].dt.total_seconds() / 3600, df_range[self.selected_data_stream],
-                         label=self.selected_data_stream, color='c')
-            self.ax.set_title(f'{self.selected_data_stream} Over Time', fontweight='bold', color='m')
-            self.ax.set_xlabel('Time (H:M:S)', fontweight='bold')
-            self.ax.set_ylabel(self.selected_data_stream, fontweight='bold')
-            self.ax.xaxis.set_major_formatter(self.format_time)
-            self.ax.legend()
+            x_values = df_range['Minute'].dt.total_seconds() / 3600
+            y_values = df_range[self.selected_data_stream]
 
+            if self.selected_graph_type == 'Line':
+                self.ax.plot(x_values, y_values, label=self.selected_data_stream, color='plum')
+            elif self.selected_graph_type == 'Bar':
+                self.ax.bar(x_values, y_values, label=self.selected_data_stream, color='plum')
+            elif self.selected_graph_type == 'Scatter plot':
+                self.ax.scatter(x_values, y_values, label=self.selected_data_stream, color='plum')
+
+
+
+            self.ax.set_title(f'{self.selected_data_stream} Over Time', fontweight='bold', color='cornflowerblue')
+            self.ax.set_xlabel('Time', fontweight='bold', color='cornflowerblue')
+            self.ax.set_ylabel(self.selected_data_stream, fontweight='bold', color='cornflowerblue')
+            self.ax.xaxis.set_major_formatter(self.format_time)
+
+            self.ax.legend()
             self.canvas.draw()
+
         except pd.errors.EmptyDataError:
             messagebox.showerror("Empty File", "The selected file is empty.")
         except pd.errors.ParserError:
             messagebox.showerror("Invalid File", "The selected file is not a valid CSV file.")
 
-            if self.utc_var.get():
-                # Convert to UTC if necessary
-                df_range['Time'] = df_range['Time'].apply(lambda x: x.to_pydatetime().replace(tzinfo=pytz.UTC))
-            else:
-                # Convert to local time if necessary
-                df_range['Time'] = df_range['Time'].apply(
-                    lambda x: x.to_pydatetime().replace(tzinfo=pytz.UTC).astimezone(tz=None))
 
 if __name__ == "__main__":
     root = tk.Tk()
