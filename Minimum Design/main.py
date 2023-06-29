@@ -29,6 +29,16 @@ class DataVisualizer:
         time_range_btn = tk.Button(master=btn_frame, text="Set Time Range", command=self.set_time_range)
         time_range_btn.pack(side=tk.LEFT)
 
+        data_stream_1_btn = tk.Button(master=btn_frame, text="Set Data Stream", command=self.set_time_range)
+        data_stream_1_btn.pack(side=tk.RIGHT)
+
+        data_stream_2_btn = tk.Button(master=btn_frame, text="Set Data Stream", command=self.set_time_range)
+        data_stream_2_btn.pack(side=tk.RIGHT)
+
+        change_time = tk.Button(master=btn_frame, text="Set Data Stream", command=self.set_time_range)
+        data_stream_2_btn.pack(side=tk.RIGHT)
+
+
         self.df = pd.DataFrame()
         self.time_range = None
         self.filename = None

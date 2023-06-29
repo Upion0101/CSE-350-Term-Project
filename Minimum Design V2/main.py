@@ -1,7 +1,5 @@
 import tkinter as tk
-import matplotlib.dates as mdates
-from matplotlib.ticker import FuncFormatter
-from tkinter import filedialog, simpledialog, messagebox
+from tkinter import simpledialog, messagebox
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import style
@@ -10,6 +8,7 @@ import os
 import pytz
 from datetime import datetime, timedelta
 from tzlocal import get_localzone
+
 
 
 # Apply custom style
@@ -190,27 +189,21 @@ class DataVisualizer:
             else:
                 df_range = self.df
 
-            self.ax.plot(df_range['Minute'].dt.total_seconds() / 3600, df_range[self.selected_data_stream],
-                         label=self.selected_data_stream, color='c')
+            self.ax.scatter(df_range['Datetime'], df_range[self.selected_data_stream],
+                            label=self.selected_data_stream, color='c')
             self.ax.set_title(f'{self.selected_data_stream} Over Time', fontweight='bold', color='m')
-            self.ax.set_xlabel('Time (H:M:S)', fontweight='bold')
+            self.ax.set_xlabel('Time', fontweight='bold')
             self.ax.set_ylabel(self.selected_data_stream, fontweight='bold')
-            self.ax.xaxis.set_major_formatter(self.format_time)
             self.ax.legend()
+
+            self.ax.autoscale(enable=True, axis='both',
+                              tight=True)  # Adjust both x-axis and y-axis limits to the plotted data
 
             self.canvas.draw()
         except pd.errors.EmptyDataError:
             messagebox.showerror("Empty File", "The selected file is empty.")
         except pd.errors.ParserError:
             messagebox.showerror("Invalid File", "The selected file is not a valid CSV file.")
-
-            if self.utc_var.get():
-                # Convert to UTC if necessary
-                df_range['Time'] = df_range['Time'].apply(lambda x: x.to_pydatetime().replace(tzinfo=pytz.UTC))
-            else:
-                # Convert to local time if necessary
-                df_range['Time'] = df_range['Time'].apply(
-                    lambda x: x.to_pydatetime().replace(tzinfo=pytz.UTC).astimezone(tz=None))
 
 if __name__ == "__main__":
     root = tk.Tk()
