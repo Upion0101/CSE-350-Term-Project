@@ -1,23 +1,34 @@
 import tkinter as tk
-import pypyodbc as odbc
-from credential import username, password
-import matplotlib.dates as mdates
-from matplotlib.ticker import FuncFormatter
 from tkinter import filedialog, simpledialog, messagebox
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import style
 import pandas as pd
 import os
-import pytz
 from datetime import datetime, timedelta
 from tzlocal import get_localzone
+import matplotlib.pyplot as plt
 
 
 # Apply custom style
 style.use('ggplot')
 
+
 class DataVisualizer:
+    client_names = [
+        '20200118\\310',
+        '20200118\\311',
+        '20200118\\312',
+        '20200119\\310',
+        '20200119\\311',
+        '20200119\\312',
+        '20200120\\310',
+        '20200120\\312',
+        '20200121\\310',
+        '20200121\\312'
+    ]
+
+    data_stream_names = ['Eda avg', 'Acc magnitude avg', 'Temp avg', 'Movement intensity', 'Steps count', 'Rest']
 
     def __init__(self, window):
         self.window = window
@@ -31,9 +42,6 @@ class DataVisualizer:
         btn_frame = tk.Frame(master=window)
         btn_frame.pack(side=tk.BOTTOM)
 
-        connectdb_btn = tk.Button(master=btn_frame, text = "Connect to Database", command=self.connectdb)
-        connectdb_btn.pack(side=tk.LEFT)
-
         clear_btn = tk.Button(master=btn_frame, text="Clear Data", command=self.clear_data)
         clear_btn.pack(side=tk.LEFT)
 
@@ -43,19 +51,6 @@ class DataVisualizer:
         self.df = pd.DataFrame()
         self.time_range = None
         self.filename = None
-
-        self.client_names = [
-            '20200118\\310',
-            '20200118\\311',
-            '20200118\\312',
-            '20200119\\310',
-            '20200119\\311',
-            '20200119\\312',
-            '20200120\\310',
-            '20200120\\312',
-            '20200121\\310',
-            '20200121\\312'
-        ]
 
         selected_client_var = tk.StringVar(self.window)
         selected_client_var.set(self.client_names[0])  # Set the default selected client
@@ -68,7 +63,6 @@ class DataVisualizer:
         self.utc_checkbox.pack()
         self.utc_var.trace('w', self.on_utc_changed)
 
-        self.data_stream_names = ['Eda avg', 'Acc magnitude avg', 'Temp avg', 'Movement intensity', 'Steps count','Rest']
         selected_data_stream_var = tk.StringVar(self.window)
         selected_data_stream_var.set(self.data_stream_names[0])  # Set the default selected data stream
 
@@ -118,14 +112,6 @@ class DataVisualizer:
         self.df = pd.DataFrame()
         self.time_range = None
         self.selected_data_stream = None
-
-    @staticmethod
-    def connectdb():
-        server = 'cse535.database.windows.net'
-        database = 'ProjectDB'
-        driver = '{ODBC Driver 18 for SQL Server}'
-        connection_string = odbc.connect('DRIVER=' + driver + ';SERVER=tcp:' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
-        print(connection_string)
 
     def set_time_range(self):
         try:
@@ -183,49 +169,16 @@ class DataVisualizer:
                 local_tz = get_localzone()
                 self.df['Datetime'] = self.df['Datetime'].dt.tz_localize('UTC').dt.tz_convert(local_tz)
 
-            self.df['Minute'] = self.df['Datetime'].dt.minute + self.df['Datetime'].dt.hour * 60 + self.df[
-                'Datetime'].dt.second / 60
-
-            # Convert 'Minute' column to time format (hours:minutes:seconds)
-            self.df['Minute'] = pd.to_timedelta(self.df['Minute'], unit='m')
-
-            # Drop rows with missing data
-            self.df.dropna(inplace=True)
-
-            # Sort data by 'Minute' column
-            self.df.sort_values('Minute', inplace=True)
+            if self.time_range:
+                self.df = self.df[(self.df['Datetime'].dt.time >= self.time_range[0]) &
+                                  (self.df['Datetime'].dt.time <= self.time_range[1])]
 
             self.ax.clear()
-
-            if self.time_range:
-                start, end = self.time_range
-                df_range = self.df[(self.df['Minute'] >= start) & (self.df['Minute'] <= end)]
-            else:
-                df_range = self.df
-
-            self.ax.plot(df_range['Minute'].dt.total_seconds() / 3600, df_range[self.selected_data_stream],
-                         label=self.selected_data_stream, color='c')
-            self.ax.set_title(f'{self.selected_data_stream} Over Time', fontweight='bold', color='m')
-            self.ax.set_xlabel('Time (H:M:S)', fontweight='bold')
-            self.ax.set_ylabel(self.selected_data_stream, fontweight='bold')
-            self.ax.xaxis.set_major_formatter(self.format_time)
-            self.ax.legend()
+            self.df.plot(x='Datetime', y=self.selected_data_stream, ax=self.ax, legend=False)
+            self.ax.set_xlabel("Time")
+            self.ax.set_ylabel(self.selected_data_stream)
+            self.ax.xaxis.set_major_formatter(plt.FuncFormatter(self.format_time))
 
             self.canvas.draw()
-        except pd.errors.EmptyDataError:
-            messagebox.showerror("Empty File", "The selected file is empty.")
-        except pd.errors.ParserError:
-            messagebox.showerror("Invalid File", "The selected file is not a valid CSV file.")
-
-            if self.utc_var.get():
-                # Convert to UTC if necessary
-                df_range['Time'] = df_range['Time'].apply(lambda x: x.to_pydatetime().replace(tzinfo=pytz.UTC))
-            else:
-                # Convert to local time if necessary
-                df_range['Time'] = df_range['Time'].apply(
-                    lambda x: x.to_pydatetime().replace(tzinfo=pytz.UTC).astimezone(tz=None))
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    DataVisualizer(root)
-    root.mainloop()
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while plotting the data:\n{str(e)}")

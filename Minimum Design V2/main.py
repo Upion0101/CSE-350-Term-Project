@@ -1,6 +1,4 @@
 import tkinter as tk
-import matplotlib.dates as mdates
-from matplotlib.ticker import FuncFormatter
 from tkinter import filedialog, simpledialog, messagebox
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -76,7 +74,7 @@ class DataVisualizer:
         selected_data_stream_var.trace('w', on_data_stream_selected)
 
         self.data_stream_dropdown = tk.OptionMenu(self.window, selected_data_stream_var, *self.data_stream_names)
-        self.data_stream_dropdown.pack()
+        self.data_stream_dropdown.pack(side=tk.RIGHT)
 
         def on_client_selected(*args):
             selected_client = selected_client_var.get()  # Get the selected client
@@ -92,7 +90,7 @@ class DataVisualizer:
         selected_client_var.trace('w', on_client_selected)
 
         self.client_dropdown = tk.OptionMenu(self.window, selected_client_var, *self.client_names)
-        self.client_dropdown.pack()
+        self.client_dropdown.pack(side=tk.RIGHT)
 
         stats_btn = tk.Button(master=btn_frame, text="Show Statistics", command=self.show_stats)
         stats_btn.pack(side=tk.LEFT)
@@ -102,9 +100,9 @@ class DataVisualizer:
         self.plot_data()
 
     def format_time(self, x, pos=None):
-        h = int(x // 3600)
+        h = int(x % 60)
         m = int((x % 3600) // 60)
-        s = int(x % 60)
+        s = int(x // 3600)
         return f"{h:02d}:{m:02d}:{s:02d}"
 
     def clear_data(self):
@@ -190,7 +188,7 @@ class DataVisualizer:
             else:
                 df_range = self.df
 
-            self.ax.plot(df_range['Minute'].dt.total_seconds() / 3600, df_range[self.selected_data_stream],
+            self.ax.scatter(df_range['Minute'].dt.total_seconds() / 3600, df_range[self.selected_data_stream],
                          label=self.selected_data_stream, color='c')
             self.ax.set_title(f'{self.selected_data_stream} Over Time', fontweight='bold', color='m')
             self.ax.set_xlabel('Time (H:M:S)', fontweight='bold')
