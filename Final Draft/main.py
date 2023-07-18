@@ -48,8 +48,13 @@ class DataVisualizer:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.window)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
+        """Buttons and Dropdown menus"""
         btnFrame = tk.Frame(master=window)
         btnFrame.pack(side=tk.BOTTOM)
+
+        # Change between utc and local time button
+        utcFrame = tk.Frame(master=window)
+        utcFrame.pack(side=tk.BOTTOM)
 
         # Clear button
         clearBtn = tk.Button(master=btnFrame, text="Clear Data", command=self.clearData)
@@ -59,31 +64,24 @@ class DataVisualizer:
         timeRangeBtn = tk.Button(master=btnFrame, text="Enter Time Range", command=self.setTimeRange)
         timeRangeBtn.pack(side=tk.LEFT)
 
+        # Statistical Analysis Button
+        statsBtn = tk.Button(master=btnFrame, text="Statistical Analysis", command=self.statsAnalysis)
+        statsBtn.pack(side=tk.LEFT)
+
         # Connect Database button
         connectDbBtn = tk.Button(master=btnFrame, text="Connect to Database", command=self.connectDb)
-        connectDbBtn.pack(side=tk.LEFT)
+        connectDbBtn.pack(side=tk.RIGHT)
 
+        # Query button
+        queryDbBtn = tk.Button(master=btnFrame, text="Query", command=self.onQuerySelect)
+        queryDbBtn.pack(side=tk.RIGHT)
+
+        # Connect Database button
+        uploadCSVBtn = tk.Button(master=btnFrame, text="Upload CSV", command=self.onUploadCSVSelect)
+        uploadCSVBtn.pack(side=tk.RIGHT)
 
         selectedClientVar = tk.StringVar(self.window)
         selectedClientVar.set(self.clientNames[0])  # Set the default selected client
-
-        #
-        utcFrame = tk.Frame(master=window)
-        utcFrame.pack(side=tk.BOTTOM)
-
-        # Boolean for UTC checkbox
-        self.utcVar = tk.BooleanVar()
-        self.utcCheckbox = tk.Checkbutton(self.window, text="Convert to UTC", variable=self.utcVar)
-        self.utcCheckbox.pack()
-        self.utcVar.trace('w', self.onUtcChanged)
-
-        # Dropdown for data stream selection
-        self.dataStreamNames = ['Eda avg', 'Acc magnitude avg', 'Temp avg', 'Movement intensity', 'Steps count',
-                                'Rest', 'On Wrist']
-        selectedDataStreamVar = tk.StringVar(self.window)
-        selectedDataStreamVar.set(self.dataStreamNames[0])  # Set the default selected data stream
-
-        self.selectedDataStream = self.dataStreamNames[0]  # Initialize self.selectedDataStream
 
         # Dropdown for graph type selection
         self.graphTypes = ['Line', 'Bar', 'Scatter plot']
@@ -94,6 +92,24 @@ class DataVisualizer:
         graphTypeDropdown = tk.OptionMenu(self.window, selectedGraphTypeVar, *self.graphTypes,
                                           command=self.onGraphTypeSelected)
         graphTypeDropdown.pack()
+
+        # Dropdown for data stream selection
+        self.dataStreamNames = ['Eda avg', 'Acc magnitude avg', 'Temp avg', 'Movement intensity', 'Steps count',
+                                'Rest', 'On Wrist']
+        selectedDataStreamVar = tk.StringVar(self.window)
+        selectedDataStreamVar.set(self.dataStreamNames[0])  # Set the default selected data stream
+        self.selectedDataStream = self.dataStreamNames[0]  # Initialize self.selectedDataStream
+
+        # Boolean for UTC checkbox
+        self.utcVar = tk.BooleanVar()
+        self.utcCheckbox = tk.Checkbutton(self.window, text="Convert to UTC", variable=self.utcVar)
+        self.utcCheckbox.pack()
+        self.utcVar.trace('w', self.onUtcChanged)
+
+        """Buttons and Dropdown menus end here"""
+
+
+
 
         #### Function definitions ###
 
@@ -122,9 +138,6 @@ class DataVisualizer:
         self.clientDropdown = tk.OptionMenu(self.window, selectedClientVar, *self.clientNames)
         self.clientDropdown.pack()
 
-        statsBtn = tk.Button(master=btnFrame, text="Statistical Analysis", command=self.statsAnalysis)
-        statsBtn.pack(side=tk.LEFT)
-
     def onUtcChanged(self, *args):
         self.plotData()
 
@@ -152,6 +165,10 @@ class DataVisualizer:
         connectionString = odbc.connect(
             'DRIVER=' + driver + ';SERVER=tcp:' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
         print(connectionString)
+    def onQuerySelect(self):
+        return
+    def onUploadCSVSelect(self):
+        return
 
     def setTimeRange(self):
         try:
