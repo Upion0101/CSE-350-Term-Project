@@ -156,12 +156,10 @@ class DataVisualizer:
         server = 'cse535.database.windows.net'
         database = 'ProjectDB'
         driver = '{ODBC Driver 18 for SQL Server}'
-        connectionString = odbc.connect(
-            'DRIVER=' + driver +
-            ';SERVER=tcp:' + server +
-            ';PORT=1433;DATABASE=' + database +
-            ';UID=' + username +
-            ';PWD=' + password)
+        connectionString = ('DRIVER=' + driver + ';SERVER=tcp:' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + password )
+
+        odbc.connect(connectionString)
+        print(odbc.connect(connectionString))
 
     def onQuerySelect(self):
         return
