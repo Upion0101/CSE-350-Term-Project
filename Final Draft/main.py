@@ -1,15 +1,12 @@
 import tkinter as tk
 import pypyodbc as odbc
 from credential import username, password
-import matplotlib.dates as mdates
-from matplotlib.ticker import FuncFormatter
-from tkinter import filedialog, simpledialog, messagebox
+from tkinter import simpledialog, messagebox
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import style
 import pandas as pd
 import os
-import pytz
 from datetime import datetime, timedelta
 from tzlocal import get_localzone
 
@@ -108,12 +105,9 @@ class DataVisualizer:
 
         """Buttons and Dropdown menus end here"""
 
+        """ Function definitions """
 
-
-
-        #### Function definitions ###
-
-        def onDataStreamSelected(*args):
+        def onDataStreamSelected():
             self.selectedDataStream = selectedDataStreamVar.get()  # Get the selected data stream
             self.plotData()
 
@@ -122,7 +116,7 @@ class DataVisualizer:
         self.dataStreamDropdown = tk.OptionMenu(self.window, selectedDataStreamVar, *self.dataStreamNames)
         self.dataStreamDropdown.pack()
 
-        def onClientSelected(*args):
+        def onClientSelected():
             selectedClient = selectedClientVar.get()  # Get the selected client
             folderPath = os.path.join(os.getcwd(), 'Dataset', selectedClient)
             filePath = os.path.join(folderPath, 'summary.csv')
@@ -138,10 +132,10 @@ class DataVisualizer:
         self.clientDropdown = tk.OptionMenu(self.window, selectedClientVar, *self.clientNames)
         self.clientDropdown.pack()
 
-    def onUtcChanged(self, *args):
+    def onUtcChanged(self):
         self.plotData()
 
-    def formatTime(self, x, pos=None):
+    def formatTime(self, x):
         h = int(x)
         m = int((x * 60) % 60)
         s = int((x * 3600) % 60)
@@ -163,10 +157,15 @@ class DataVisualizer:
         database = 'ProjectDB'
         driver = '{ODBC Driver 18 for SQL Server}'
         connectionString = odbc.connect(
-            'DRIVER=' + driver + ';SERVER=tcp:' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
-        print(connectionString)
+            'DRIVER=' + driver +
+            ';SERVER=tcp:' + server +
+            ';PORT=1433;DATABASE=' + database +
+            ';UID=' + username +
+            ';PWD=' + password)
+
     def onQuerySelect(self):
         return
+
     def onUploadCSVSelect(self):
         return
 
@@ -202,7 +201,12 @@ class DataVisualizer:
         # Compute and display the basic statistics for the columns
         for column in [self.selectedDataStream]:
             stats = self.df[column].describe()
-            statsStr = f"{column}:\nMean: {stats['mean']}\nMedian: {self.df[column].median()}\nStd. dev: {stats['std']}\nMin: {stats['min']}\nMax: {stats['max']}"
+            statsStr = f"{column}:" \
+                       f"\nMean: {stats['mean']}" \
+                       f"\nMedian: {self.df[column].median()}" \
+                       f"\nStd. dev: {stats['std']}" \
+                       f"\nMin: {stats['min']}" \
+                       f"\nMax: {stats['max']}"
 
             label = tk.Label(master=statsWindow, text=statsStr, justify=tk.LEFT)
             label.pack()
