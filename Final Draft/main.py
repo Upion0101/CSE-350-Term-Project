@@ -107,7 +107,7 @@ class DataVisualizer:
 
         """ Function definitions """
 
-        def onDataStreamSelected():
+        def onDataStreamSelected(*args):
             self.selectedDataStream = selectedDataStreamVar.get()  # Get the selected data stream
             self.plotData()
 
@@ -116,7 +116,7 @@ class DataVisualizer:
         self.dataStreamDropdown = tk.OptionMenu(self.window, selectedDataStreamVar, *self.dataStreamNames)
         self.dataStreamDropdown.pack()
 
-        def onClientSelected():
+        def onClientSelected(*args):
             selectedClient = selectedClientVar.get()  # Get the selected client
             folderPath = os.path.join(os.getcwd(), 'Dataset', selectedClient)
             filePath = os.path.join(folderPath, 'summary.csv')
@@ -132,10 +132,10 @@ class DataVisualizer:
         self.clientDropdown = tk.OptionMenu(self.window, selectedClientVar, *self.clientNames)
         self.clientDropdown.pack()
 
-    def onUtcChanged(self):
+    def onUtcChanged(self,*args):
         self.plotData()
 
-    def formatTime(self, x):
+    def formatTime(self, x, *args):
         h = int(x)
         m = int((x * 60) % 60)
         s = int((x * 3600) % 60)
