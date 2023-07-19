@@ -97,7 +97,7 @@ class DataVisualizer:
         self.graphTypes = ['Line', 'Bar', 'Scatter plot']
         selectedGraphTypeVar = tk.StringVar(self.window)
         selectedGraphTypeVar.set("Select a Graph Type")
-        self.selectedGraphType = "Select a Graph Type" 
+        self.selectedGraphType = "Select a Graph Type"
 
         graphTypeDropdown = tk.OptionMenu(self.window, selectedGraphTypeVar, *self.graphTypes,
                                           command=self.onGraphTypeSelected)
@@ -191,7 +191,9 @@ class DataVisualizer:
                 self.filename = query
                 self.plotData()
             except Exception as e:
-                messagebox.showerror("Error", f"Error executing query: {e}")
+                messagebox.showerror("Error", f"Error executing query: {e}\n Hint: The querying feature is primarily designed for numeric "
+                                              f"filtering rather than excluding columns. It is intended to narrow down the data based on "
+                                              f"numerical conditions or ranges, not for removing specific columns from the query results.")
         else:
             messagebox.showinfo("Query", "Please enter a valid SQL query.")
         return
@@ -242,7 +244,7 @@ class DataVisualizer:
 
             statsStr = f"{column}:" \
                        f"\nMean: {mean_val}" \
-                       f"\nMedian: {median_val}"\
+                       f"\nMedian: {median_val}" \
                        f"\nStd. dev: {self.df[column.replace(' ', '_')].std()}" \
                        f"\nMin: {self.df[column.replace(' ', '_')].min()}" \
                        f"\nMax: {self.df[column.replace(' ', '_')].max()}"
@@ -320,4 +322,3 @@ if __name__ == "__main__":
     dataVisualizer = DataVisualizer(root)
     root.mainloop()
     print("Application stopped.")
-
